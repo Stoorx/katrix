@@ -1,5 +1,9 @@
 package io.stoorx.katrix
 
+import io.stoorx.katrix.views.ColumnView
+import io.stoorx.katrix.views.MatrixView
+import io.stoorx.katrix.views.RowView
+
 interface Matrix<T> : Iterable<T> {
     /**
      * Size of matrix
@@ -53,6 +57,9 @@ interface Matrix<T> : Iterable<T> {
         step: MatrixIndex = MatrixIndex(1, 1)
     ): MatrixView<T>
 
+    fun rowView(row: Int): RowView<T>
+    fun columnView(column: Int): ColumnView<T>
+
     override fun equals(other: Any?): Boolean
 
     override fun hashCode(): Int
@@ -61,7 +68,7 @@ interface Matrix<T> : Iterable<T> {
     fun toStringRich(elementSeparator: String = ", ", lineSeparator: String = "\n"): String =
         this.foldIndexed(StringBuilder()) { index, sb, e ->
             when {
-                index % this.size.columns != this.size.columns - 1 -> sb.append(e).append(elementSeparator)
+                index % this.size.columns != this.size.lastColumnIndex -> sb.append(e).append(elementSeparator)
                 index != this.size.elementsCount() - 1 -> sb.append(e).append(lineSeparator)
                 else -> sb.append(e)
             }

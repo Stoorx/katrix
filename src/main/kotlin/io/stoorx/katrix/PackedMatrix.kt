@@ -1,5 +1,7 @@
 package io.stoorx.katrix
 
+import io.stoorx.katrix.views.*
+
 class PackedMatrix<T> : MutableMatrix<T> {
     constructor(rows: Int, columns: Int, init: (index: MatrixIndex) -> T) : this(MatrixSize(rows, columns), init)
     constructor(size: MatrixSize, init: (index: MatrixIndex) -> T) {
@@ -8,17 +10,21 @@ class PackedMatrix<T> : MutableMatrix<T> {
         size.forEach { mi -> _data.add(init(mi)) }
     }
 
+    constructor(rows: Int, columns: Int, element: T) : this(MatrixSize(rows, columns), element)
+    constructor(size: MatrixSize, element: T) {
+        this._size = size
+        this._data = ArrayList(size.elementsCount())
+        for (i in 0 until size.elementsCount()) {
+            _data.add(element)
+        }
+    }
+
     private val _data: MutableList<T>
     private val _size: MatrixSize
     private var _transposed: Boolean = false
 
     override fun set(row: Int, column: Int, element: T) {
-        _data[
-                linearIndex(
-                    if (_transposed) MatrixIndex(row, column)
-                    else MatrixIndex(column, row)
-                )
-        ] = element
+        set(MatrixIndex(row, column), element)
     }
 
     override fun set(index: MatrixIndex, element: T) {
@@ -36,7 +42,7 @@ class PackedMatrix<T> : MutableMatrix<T> {
         TODO()
 
     override val size: MatrixSize
-        get() = _size
+        get() = if (_transposed) _size.transposed() else _size
 
     override fun get(row: Int, column: Int): T = this[MatrixIndex(row, column)]
 
@@ -77,18 +83,22 @@ class PackedMatrix<T> : MutableMatrix<T> {
             get() = this@PackedMatrix as Matrix<T>
 
         override fun hasNext(): Boolean =
-            currentIndex.column < this@PackedMatrix.size.columns && currentIndex.row < this@PackedMatrix.size.columns
+            currentIndex.column < this@PackedMatrix.size.columns && currentIndex.row < this@PackedMatrix.size.rows
 
         @Suppress("UNCHECKED_CAST")
         override fun next(): T =
             (this@PackedMatrix[currentIndex] as T)
                 .also {
                     currentIndex = MatrixIndex(
-                        if (currentIndex.column < this@PackedMatrix.size.columns - 1) currentIndex.row
+                        if (currentIndex.column < this@PackedMatrix.size.lastColumnIndex) currentIndex.row
                         else currentIndex.row + 1,
-                        if (currentIndex.column < this@PackedMatrix.size.columns - 1) currentIndex.column + 1
+                        if (currentIndex.column < this@PackedMatrix.size.lastColumnIndex) currentIndex.column + 1
                         else 0
                     )
                 }
     }
+
+    override fun rowView(row: Int): MutableRowView<T> = PackedRowView(this, row)
+
+    override fun columnView(column: Int): MutableColumnView<T> = PackedColumnView(this, column)
 }

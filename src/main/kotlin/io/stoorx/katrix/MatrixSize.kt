@@ -4,6 +4,12 @@ data class MatrixSize(
     val rows: Int,
     val columns: Int
 ) : Iterable<MatrixIndex> {
+    val lastRowIndex: Int
+        get() = rows - 1
+
+    val lastColumnIndex: Int
+        get() = columns - 1
+
     fun elementsCount() = rows * columns
     fun transposed() = MatrixSize(columns, rows)
 
@@ -17,7 +23,7 @@ data class MatrixSize(
     override fun iterator(): Iterator<MatrixIndex> = MatrixSizeIterator()
 
     inner class MatrixSizeIterator() : Iterator<MatrixIndex> {
-        var current: MatrixIndex = MatrixIndex(0, 0)
+        private var current: MatrixIndex = MatrixIndex(0, 0)
 
         override fun hasNext(): Boolean =
             current.row < this@MatrixSize.rows && current.column < this@MatrixSize.columns
@@ -25,9 +31,9 @@ data class MatrixSize(
         override fun next(): MatrixIndex =
             current.also {
                 current = MatrixIndex(
-                    if (current.column < this@MatrixSize.columns - 1) current.row
+                    if (current.column < this@MatrixSize.lastColumnIndex) current.row
                     else current.row + 1,
-                    if (current.column < this@MatrixSize.columns - 1) current.column + 1
+                    if (current.column < this@MatrixSize.lastColumnIndex) current.column + 1
                     else 0
                 )
             }
